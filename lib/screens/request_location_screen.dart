@@ -1,36 +1,51 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:location/location.dart';
+import 'package:mybobby/Services/location_service.dart';
 import 'package:mybobby/commonClass/commonColors.dart';
 import 'package:mybobby/screens/home.dart';
 import 'package:mybobby/widgets/custombutton.dart';
 
-class AllowLocation_Screen extends ConsumerStatefulWidget {
-  const AllowLocation_Screen({Key? key}) : super(key: key);
+class RequestLocationScreen extends ConsumerStatefulWidget {
+  const RequestLocationScreen({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<AllowLocation_Screen> createState() =>
-      AllowLocation_ScreenState();
+  ConsumerState<RequestLocationScreen> createState() =>
+      RequestLocationScreenState();
 }
 
-class AllowLocation_ScreenState extends ConsumerState<AllowLocation_Screen> {
-  Location location = Location();
-  Future fetchLocation() async {
-    PermissionStatus permissionGranted;
-    permissionGranted = await location.requestPermission();
-    if (permissionGranted == PermissionStatus.granted) {
-      if (mounted) {
-        Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-            (route) => false);
-      }
-    }
-  }
-
+class RequestLocationScreenState extends ConsumerState<RequestLocationScreen> {
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<PermissionStatus?>>(requestLocationProvider,
+        (previous, next) {
+      next.when(
+        data: (data) {
+          if (data != null) {
+            if (data == PermissionStatus.granted ||
+                data == PermissionStatus.grantedLimited) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const HomeScreen(),
+                ),
+              );
+            }
+          }
+        },
+        error: (e, st) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString()),
+            ),
+          );
+        },
+        loading: () {},
+      );
+    });
+
     return Scaffold(
       appBar: AppBar(
         systemOverlayStyle: const SystemUiOverlayStyle(
@@ -66,9 +81,10 @@ class AllowLocation_ScreenState extends ConsumerState<AllowLocation_Screen> {
                         height: 8,
                       ),
                       Text(
-                        "This app requires that Location services are \n "
-                        "turned on your device and for this app. You must"
-                        "\n enable them in settings before using this app.",
+                        "This app requires that Location services are "
+                        "turned on your device and for this app. You must "
+                        "enable them in settings before using this app.",
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           fontWeight: FontWeight.w400,
                           color: sliverColor,
@@ -79,22 +95,27 @@ class AllowLocation_ScreenState extends ConsumerState<AllowLocation_Screen> {
                   Column(
                     children: [
                       CustomButton(
-                          title: "Allow only while using the app",
-                          onPressed: () async {
-                            fetchLocation();
-                          }),
+                        title: "Allow only while using the app",
+                        onPressed: () async {
+                          ref
+                              .read(requestLocationProvider.notifier)
+                              .requestPermission();
+                        },
+                      ),
                       const SizedBox(
                         height: 1,
                       ),
                       TextButton(
                         onPressed: () {
                           Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const HomeScreen()));
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const HomeScreen(),
+                            ),
+                          );
                         },
                         child: const Text(
-                          "Don’t allow this app",
+                          "Don't allow this app",
                           style: TextStyle(
                             fontWeight: FontWeight.w400,
                             color: darkBlueColor,
@@ -110,5 +131,27 @@ class AllowLocation_ScreenState extends ConsumerState<AllowLocation_Screen> {
         ],
       ),
     );
+  }
+}
+
+final requestLocationProvider = AutoDisposeAsyncNotifierProvider<
+    RequestLocationNotifier, PermissionStatus?>(RequestLocationNotifier.new);
+
+class RequestLocationNotifier
+    extends AutoDisposeAsyncNotifier<PermissionStatus?> {
+  @override
+  FutureOr<PermissionStatus?> build() async {
+    return null;
+  }
+
+  Future<void> requestPermission() async {
+    try {
+      state = const AsyncLoading();
+      final permissionStatus =
+          await ref.read(locationServiceProvider).requestPermission();
+      state = AsyncData(permissionStatus);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
   }
 }

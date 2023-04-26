@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mybobby/Services/authServices.dart';
-import 'package:mybobby/models/getUser.dart';
 
+import '../models/user_detail.dart';
+import '../services/auth_services.dart';
 
 final loginNotifierProvider =
     StateNotifierProvider.autoDispose<LoginNotifier, AsyncValue<AuthState?>>(
@@ -20,8 +20,8 @@ class LoginNotifier extends StateNotifier<AsyncValue<AuthState?>> {
   Future<void> login() async {
     try {
       state = const AsyncValue.loading();
-      await _authService.userLogin(phone!);
-      state = AsyncValue.data(AuthState(response: "OtpSent"));
+      await _authService.login(phone!);
+      state = AsyncValue.data(AuthState(event: AuthEvent.otpSent));
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -31,27 +31,28 @@ class LoginNotifier extends StateNotifier<AsyncValue<AuthState?>> {
     try {
       state = const AsyncValue.loading();
       final user = await _authService.verificationOtp(phone!, otp!);
-      state = AsyncValue.data(AuthState(response: "OtpVerified",user: user));
+      state = AsyncValue.data(AuthState(event: AuthEvent.verified, user: user));
     } catch (e, st) {
       state = AsyncValue.error(e, st);
-      debugPrint('state==Error=>$state');
     }
   }
 
-  void updatePhone(String? phone){
+  void updatePhone(String? phone) {
     this.phone = phone;
   }
 
-  void updateOtp(String? otp){
+  void updateOtp(String? otp) {
     this.otp = otp;
   }
-
 }
 
-
 class AuthState {
-  GetUser? user;
-  String? response;
+  UserDetail? user;
+  AuthEvent? event;
+  AuthState({this.user, this.event});
+}
 
-  AuthState({this.user, this.response});
+enum AuthEvent {
+  otpSent,
+  verified,
 }

@@ -27,6 +27,10 @@ class LocationService {
     }
   }
 
+  Future<PermissionStatus> requestPermission() async {
+    return await _location.requestPermission();
+  }
+
   Future<PermissionStatus> getPermissionStatus() async {
     return await _location.hasPermission();
   }
@@ -37,10 +41,6 @@ class LocationService {
 
   Future<bool> isbackgroundEnabled() async {
     return _location.isBackgroundModeEnabled();
-  }
-
-  Future<bool> toggleBackgroundMode({bool value = true}) async {
-    return _location.enableBackgroundMode(enable: value);
   }
 
   Future<LocationData> serviceEnabled() async {

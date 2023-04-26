@@ -2,10 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mybobby/Services/local_storage_service.dart';
-import 'package:mybobby/models/user.dart';
+import 'package:mybobby/screens/tracking_screen.dart';
+import 'package:mybobby/services/local_storage_service.dart';
 import 'package:mybobby/screens/home.dart';
 import 'package:mybobby/screens/login.dart';
+
+import '../models/user_detail.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -20,23 +22,30 @@ class SplashScreenState extends ConsumerState<SplashScreen> {
     super.initState();
 
     try {
+      final user = ref.read(localStorageProvider).getUserDetails();
+      final rideId = ref.read(localStorageProvider).getRideId();
       Future.delayed(const Duration(milliseconds: 800), () {
-        final user = ref.read(localStorageProvider).getUserDetails();
         if (user != null) {
           ref.read(userProvider.notifier).update((state) => state = user);
-          Navigator.of(context).pushReplacement(MaterialPageRoute(
-            builder: (context) => const HomeScreen(),
-          ));
+          if (rideId != null) {
+            Navigator.of(context).pushReplacement(MaterialPageRoute(
+              builder: (context) => TrackingScreen(rideId: rideId),
+            ));
+          } else {
+            Navigator.of(context).pushReplacement(MaterialPageRoute(
+              builder: (context) => const HomeScreen(),
+            ));
+          }
         } else {
           Navigator.of(context).pushReplacement(MaterialPageRoute(
-            builder: (context) => const Login_Screen(),
+            builder: (context) => const LoginScreen(),
           ));
         }
       });
     } catch (e) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => const Login_Screen(),
+          builder: (context) => const LoginScreen(),
         ),
       );
     }
