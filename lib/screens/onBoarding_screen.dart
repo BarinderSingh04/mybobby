@@ -21,7 +21,6 @@ class _OnBoarding_ScreenState extends State<OnBoarding_Screen> {
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return Scaffold(
-
       appBar: AppBar(
         backgroundColor: const Color(0xFFE2F0FF),
         elevation: 0,
@@ -29,7 +28,6 @@ class _OnBoarding_ScreenState extends State<OnBoarding_Screen> {
             statusBarColor: Color(0xFFE2F0FF),
             statusBarBrightness: Brightness.light,
             statusBarIconBrightness: Brightness.dark),
-
       ),
       extendBody: true,
       body: Column(
@@ -64,24 +62,23 @@ class _OnBoarding_ScreenState extends State<OnBoarding_Screen> {
                   const SizedBox(
                     height: 28,
                   ),
-
                   CustomArrowButton(
                     title: "Get Started",
                     onPressed: () {
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
-                          builder: (context) =>
-                           const Login_Screen(),
+                          builder: (context) => const LoginScreen(),
                         ),
                       );
                     },
                   ),
-                   const SizedBox(height: 10,),
-                   const Text(
-                   "Skip",
-                   style: TextStyle(color: Color(0xFF010317)),
+                  const SizedBox(
+                    height: 10,
                   ),
-
+                  const Text(
+                    "Skip",
+                    style: TextStyle(color: Color(0xFF010317)),
+                  ),
                 ],
               ),
             ),
@@ -98,7 +95,6 @@ class _OnBoarding_ScreenState extends State<OnBoarding_Screen> {
       width: 20,
       margin: const EdgeInsets.only(right: 6),
       decoration: BoxDecoration(
-
         border: isActive
             ? Border.all(
                 color: const Color(0xFF002F60),
@@ -107,22 +103,21 @@ class _OnBoarding_ScreenState extends State<OnBoarding_Screen> {
               )
             : null,
         shape: BoxShape.circle,
-
       ),
       child: Container(
-        margin:  const EdgeInsets.all(4),
+        margin: const EdgeInsets.all(4),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: isActive ? null : const Color(0xFF010317).withOpacity(0.2),
           gradient: isActive
               ? const LinearGradient(
-            // begin: Alignment.topRight,
-            // end: Alignment.bottomLeft,
-            colors: [
-              Color(0xFFFAE046),
-              Color(0xFFB29E22),
-            ],
-          )
+                  // begin: Alignment.topRight,
+                  // end: Alignment.bottomLeft,
+                  colors: [
+                    Color(0xFFFAE046),
+                    Color(0xFFB29E22),
+                  ],
+                )
               : null,
         ),
       ),

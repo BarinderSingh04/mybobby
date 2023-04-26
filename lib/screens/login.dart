@@ -5,26 +5,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 import 'package:mybobby/commonClass/commonColors.dart';
 import 'package:mybobby/config/validators.dart';
-import 'package:mybobby/models/user.dart';
-import 'package:mybobby/providerNotifier/login_notifier.dart';
 import 'package:mybobby/screens/myProfile.dart';
 import 'package:mybobby/screens/verification_screen.dart';
 import 'package:mybobby/widgets/customArrowButton.dart';
 import 'package:mybobby/widgets/loading_dialog.dart';
 
-import 'allowLocation_screen.dart';
+import '../models/user_detail.dart';
+import '../providerNotifier/login_notifier.dart';
+import 'request_location_screen.dart';
 
-class Login_Screen extends ConsumerStatefulWidget {
-  const Login_Screen({Key? key}) : super(key: key);
+class LoginScreen extends ConsumerStatefulWidget {
+  const LoginScreen({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<Login_Screen> createState() => _Login_ScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _Login_ScreenState extends ConsumerState<Login_Screen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   int textLength = 0;
-  String countryFlag = '🇺🇸';
-  String countryCode = '+1';
+  String countryFlag = '🇧🇪';
+  String countryCode = '+32';
 
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
@@ -33,21 +33,22 @@ class _Login_ScreenState extends ConsumerState<Login_Screen> {
   @override
   Widget build(BuildContext context) {
     final updateState = ref.watch(loginNotifierProvider);
+    Size size = MediaQuery.of(context).size;
+
     ref.listen<AsyncValue<AuthState?>>(loginNotifierProvider,
         (previous, state) {
       state.when(
-        data: (data) async {
+        data: (data) {
           if (data != null) {
-            if (data.response == "OtpSent") {
+            if (data.event == AuthEvent.otpSent) {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   settings: const RouteSettings(name: "/navigation"),
-                  builder: (context) => const Verification_Screen(),
+                  builder: (context) => const VerificationScreen(),
                 ),
               );
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  backgroundColor: darkBlueColor,
                   content: Text(
                     "Otp is Sent Successfully",
                     style: TextStyle(color: Colors.white),
@@ -55,20 +56,19 @@ class _Login_ScreenState extends ConsumerState<Login_Screen> {
                 ),
               );
             }
-            if (data.response == "OtpVerified") {
+            if (data.event == AuthEvent.verified) {
               ref.read(userProvider.notifier).update((state) => data.user!);
-              if (data.user?.firstName == null || data.user!.firstName!.isEmpty) {
+              if (data.user?.firstName == null ||
+                  data.user!.firstName!.isEmpty) {
                 Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(
-                      settings: const RouteSettings(name: "/navigation"),
-                      builder: (context) => const MyProfile_Screen(),
+                      builder: (context) => const MyProfileScreen(),
                     ),
                     (route) => false);
               } else {
                 Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(
-                      settings: const RouteSettings(name: "/navigation"),
-                      builder: (context) => const AllowLocation_Screen(),
+                      builder: (context) => const RequestLocationScreen(),
                     ),
                     (route) => false);
               }
@@ -87,10 +87,10 @@ class _Login_ScreenState extends ConsumerState<Login_Screen> {
         loading: () {},
       );
     });
-    Size size = MediaQuery.of(context).size;
+
     return Material(
       child: LoadingOverlay(
-        isLoading: updateState.isLoading,
+        isLoading: updateState is AsyncLoading,
         opacity: 0.8,
         color: whiteColor,
         progressIndicator: const LoadingDialog(),
@@ -122,11 +122,12 @@ class _Login_ScreenState extends ConsumerState<Login_Screen> {
               height: size.height,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
               decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(22),
-                    topLeft: Radius.circular(22),
-                  )),
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(22),
+                  topLeft: Radius.circular(22),
+                ),
+              ),
               child: Form(
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 key: formKey,
@@ -134,7 +135,7 @@ class _Login_ScreenState extends ConsumerState<Login_Screen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      "What’s your number?",
+                      "What's your number?",
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 28,
@@ -169,103 +170,100 @@ class _Login_ScreenState extends ConsumerState<Login_Screen> {
                       keyboardType: TextInputType.phone,
                       textInputAction: TextInputAction.done,
                       decoration: InputDecoration(
-                          prefixIcon: InkWell(
-                            onTap: () {
-                              showCountryPicker(
-                                context: context,
-                                //Optional. Shows phone code before the country name.
-                                showPhoneCode: true,
-
-                                onSelect: (Country country) {
-                                  setState(() {
-                                    countryFlag = country.flagEmoji;
-                                    countryCode = country.phoneCode;
-                                  });
-                                  debugPrint("countryCode===>$countryCode");
-                                },
-
-                                // Optional. Sets the theme for the country list picker.
-                                countryListTheme: CountryListThemeData(
-                                  // Optional. Sets the border radius for the bottomsheet.
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(40.0),
-                                    topRight: Radius.circular(40.0),
-                                  ),
-                                  // Optional. Styles the search field.
-                                  inputDecoration: InputDecoration(
-                                    labelText: 'Search',
-                                    hintText: 'Start typing to search',
-                                    prefixIcon: const Icon(Icons.search),
-                                    border: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: darkSilverColor.withOpacity(0.2),
-                                      ),
+                        prefixIcon: InkWell(
+                          onTap: () {
+                            showCountryPicker(
+                              context: context,
+                              showPhoneCode: true,
+                              onSelect: (Country country) {
+                                setState(() {
+                                  countryFlag = country.flagEmoji;
+                                  countryCode = country.phoneCode;
+                                });
+                              },
+                              countryListTheme: CountryListThemeData(
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(40.0),
+                                  topRight: Radius.circular(40.0),
+                                ),
+                                // Optional. Styles the search field.
+                                inputDecoration: InputDecoration(
+                                  labelText: 'Search',
+                                  hintText: 'Start typing to search',
+                                  prefixIcon: const Icon(Icons.search),
+                                  border: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color: darkSilverColor.withOpacity(0.2),
                                     ),
-                                  ),
-                                  // Optional. Styles the text in the search field
-                                  searchTextStyle: const TextStyle(
-                                    color: Colors.blue,
-                                    fontSize: 18,
                                   ),
                                 ),
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 8),
-                              child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    SizedBox(
-                                        height: 24,
-                                        width: 24,
-                                        child: FittedBox(
-                                            fit: BoxFit.cover,
-                                            child: Text(
-                                              countryFlag,
-                                              style:
-                                                  const TextStyle(fontSize: 16),
-                                            ))),
-                                    const SizedBox(
-                                      width: 6,
+                                searchTextStyle: const TextStyle(
+                                  color: Colors.blue,
+                                  fontSize: 18,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: FittedBox(
+                                    fit: BoxFit.cover,
+                                    child: Text(
+                                      countryFlag,
+                                      style: const TextStyle(fontSize: 16),
                                     ),
-                                    Image.asset(
-                                        "assets/images/dropdownicon.png"),
-                                    const SizedBox(
-                                      width: 9,
-                                    ),
-                                    Text(
-                                      countryCode,
-                                      style:
-                                          const TextStyle(color: darkBlueColor),
-                                    ),
-                                    const SizedBox(
-                                      width: 4,
-                                    ),
-                                  ]),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8.0),
+                                  child: Image.asset(
+                                    "assets/images/dropdownicon.png",
+                                  ),
+                                ),
+                                Text(
+                                  countryCode,
+                                  style: const TextStyle(
+                                    color: darkBlueColor,
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 4,
+                                ),
+                              ],
                             ),
                           ),
-                          suffixIcon: textLength > 0
-                              ? Image.asset("assets/images/greentick.png")
-                              : null,
-                          filled: true,
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: const BorderSide(
-                                color: navyBlueColor, width: 2),
-                            borderRadius: BorderRadius.circular(13),
+                        ),
+                        filled: true,
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(
+                            color: navyBlueColor,
+                            width: 2,
                           ),
-                          hintStyle: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey.shade500),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: const BorderSide(
-                                color: lightGreyColor, width: 2),
-                            borderRadius: BorderRadius.circular(13),
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                        hintStyle: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey.shade500),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(
+                            color: lightGreyColor,
+                            width: 2,
                           ),
-                          fillColor: lightColor,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(13),
-                          )),
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                        fillColor: lightColor,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                      ),
                       validator: ref.read(validatorsProvider).validatePhone,
                     ),
                     SizedBox(

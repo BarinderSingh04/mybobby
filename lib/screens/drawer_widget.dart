@@ -1,13 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mybobby/Services/local_storage_service.dart';
+import 'package:mybobby/screens/mytrips_screens/my_trip_screen.dart';
+import 'package:mybobby/services/local_storage_service.dart';
 import 'package:mybobby/commonClass/commonColors.dart';
-import 'package:mybobby/models/user.dart';
 import 'package:mybobby/screens/myAddresses_screen.dart';
 import 'package:mybobby/screens/myProfile.dart';
-import 'package:mybobby/screens/mytrips_screens/myTrip_screen.dart';
 import 'package:mybobby/screens/notifications_screen.dart';
+import '../models/user_detail.dart';
 import 'helpandsupport_screen.dart';
 import 'onBoarding_screen.dart';
 
@@ -72,7 +72,7 @@ class DrawerWidget extends ConsumerWidget {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    const MyProfile_Screen(isEditProfile: true),
+                                    const MyProfileScreen(isEditProfile: true),
                               ),
                             );
                           },
@@ -119,7 +119,7 @@ class DrawerWidget extends ConsumerWidget {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const MyTrip()));
+                                builder: (context) =>  const MyTripScreen(true)));
                       },
                       child: Row(
                         children: [
@@ -133,7 +133,7 @@ class DrawerWidget extends ConsumerWidget {
                             width: size.width * 0.05,
                           ),
                           const Text(
-                            "My Tips",
+                            "My Trips",
                             style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,

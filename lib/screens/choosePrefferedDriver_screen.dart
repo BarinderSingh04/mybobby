@@ -2,19 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mybobby/commonClass/commonColors.dart';
-import 'package:mybobby/screens/confirmTrip_screen.dart';
+import 'package:mybobby/screens/confirm_trip_screen.dart';
 import 'package:mybobby/widgets/customArrowButton.dart';
 
 class ChooseDriver_Screen extends ConsumerStatefulWidget {
- final double? lat;
- final double? lng;
-  const ChooseDriver_Screen({Key? key,
-  this.lat,
+  final double? lat;
+  final double? lng;
+  const ChooseDriver_Screen({
+    Key? key,
+    this.lat,
     this.lng,
   }) : super(key: key);
 
   @override
-  ConsumerState<ChooseDriver_Screen> createState() => _ChooseDriver_ScreenState();
+  ConsumerState<ChooseDriver_Screen> createState() =>
+      _ChooseDriver_ScreenState();
 }
 
 class _ChooseDriver_ScreenState extends ConsumerState<ChooseDriver_Screen> {
@@ -50,13 +52,11 @@ class _ChooseDriver_ScreenState extends ConsumerState<ChooseDriver_Screen> {
           statusBarColor: Colors.transparent,
           systemStatusBarContrastEnforced: true),
       child: Container(
-        decoration:   const BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
-              colors: blueGradientColor
-
-              ),
+              colors: blueGradientColor),
         ),
         child: Scaffold(
           backgroundColor: transparentColor,
@@ -139,119 +139,133 @@ class _ChooseDriver_ScreenState extends ConsumerState<ChooseDriver_Screen> {
                           });
                         },
                         child: Container(
-                          padding: const EdgeInsets.only(top: 16,right: 16,bottom: 32,left: 16),
-
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                                color: selectedIndex == index
-                                    ? navyBlueColor
-                                    : lightGreyColor),
-                            borderRadius: BorderRadius.circular(20),
-                            color: selectedIndex == index
-                                ? lightColor
-                                : whiteColor,
-                          ),
-                          child:Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              SizedBox(
-                                  width: 58,
-                                  height: 58,
-                                  child: Image.asset(
-                                    imageList[index],
-                                    fit: BoxFit.contain,
-                                  )),
-                              const SizedBox(width: 16,),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(height: 5,),
-                                    Text(
-                                      titleList[index],
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 16,
-                                        color: darkBlueColor,
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 5,
-                                    ),
-                                    Text(
-                                      priceList[index],
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 16,
-                                        color: darkBlueColor,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12,),
-                                    Row(
-                                      children: [
-                                        dotContainer(),
-                                        const SizedBox(width:4 ,),
-                                        Text(
-                                          "Where does it come from? ",
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                              color:  darkBlueColor
-                                                  .withOpacity(0.6),
-                                              fontWeight: FontWeight.w400),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 3,),
-                                    Row(
-                                      children: [
-                                        dotContainer(),
-                                        const SizedBox(width:4 ,),
-                                        Text(
-                                          "Why do we use it?",
-                                          style: TextStyle(
-                                              fontSize: 12,
-                                              color: darkBlueColor
-                                                  .withOpacity(0.6),
-                                              fontWeight: FontWeight.w400),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 3,),
-                                    Row(
-                                      children: [
-                                        dotContainer(),
-                                        const SizedBox(width:4 ,),
-                                        Text(
-                                          "Where can I get some? ",
-                                          style: TextStyle(
-                                              fontSize: 12,
-                                              color: darkBlueColor
-                                                  .withOpacity(0.6),
-                                              fontWeight: FontWeight.w400),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                            padding: const EdgeInsets.only(
+                                top: 16, right: 16, bottom: 32, left: 16),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                  color: selectedIndex == index
+                                      ? navyBlueColor
+                                      : lightGreyColor),
+                              borderRadius: BorderRadius.circular(20),
+                              color: selectedIndex == index
+                                  ? lightColor
+                                  : whiteColor,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                SizedBox(
+                                    width: 58,
+                                    height: 58,
+                                    child: Image.asset(
+                                      imageList[index],
+                                      fit: BoxFit.contain,
+                                    )),
+                                const SizedBox(
+                                  width: 16,
                                 ),
-                              ),
-                               Padding(
-                                 padding: const EdgeInsets.only(top: 8),
-                                 child: SizedBox(
-                                        height: 24,
-                                        width: 24,
-                                        child:selectedIndex==index? Image.asset(
-                                          "assets/images/greentick.png",
-                                          fit: BoxFit.fill,
-                                        ):null),
-                               )
-
-
-                            ],
-
-                          )
-
-                        ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(
+                                        height: 5,
+                                      ),
+                                      Text(
+                                        titleList[index],
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 16,
+                                          color: darkBlueColor,
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 5,
+                                      ),
+                                      Text(
+                                        priceList[index],
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 16,
+                                          color: darkBlueColor,
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 12,
+                                      ),
+                                      Row(
+                                        children: [
+                                          dotContainer(),
+                                          const SizedBox(
+                                            width: 4,
+                                          ),
+                                          Text(
+                                            "Where does it come from? ",
+                                            style: TextStyle(
+                                                fontSize: 12,
+                                                color: darkBlueColor
+                                                    .withOpacity(0.6),
+                                                fontWeight: FontWeight.w400),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(
+                                        height: 3,
+                                      ),
+                                      Row(
+                                        children: [
+                                          dotContainer(),
+                                          const SizedBox(
+                                            width: 4,
+                                          ),
+                                          Text(
+                                            "Why do we use it?",
+                                            style: TextStyle(
+                                                fontSize: 12,
+                                                color: darkBlueColor
+                                                    .withOpacity(0.6),
+                                                fontWeight: FontWeight.w400),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(
+                                        height: 3,
+                                      ),
+                                      Row(
+                                        children: [
+                                          dotContainer(),
+                                          const SizedBox(
+                                            width: 4,
+                                          ),
+                                          Text(
+                                            "Where can I get some? ",
+                                            style: TextStyle(
+                                                fontSize: 12,
+                                                color: darkBlueColor
+                                                    .withOpacity(0.6),
+                                                fontWeight: FontWeight.w400),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: SizedBox(
+                                      height: 24,
+                                      width: 24,
+                                      child: selectedIndex == index
+                                          ? Image.asset(
+                                              "assets/images/greentick.png",
+                                              fit: BoxFit.fill,
+                                            )
+                                          : null),
+                                )
+                              ],
+                            )),
                       );
                     },
                   ),
@@ -262,11 +276,13 @@ class _ChooseDriver_ScreenState extends ConsumerState<ChooseDriver_Screen> {
                 CustomArrowButton(
                     title: "Continue",
                     onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  ConfirmTrip_Screen(lng: widget.lng,lat: widget.lat,)));
+                      // Navigator.push(
+                      //     context,
+                      //     MaterialPageRoute(
+                      //         builder: (context) => ConfirmTripScreen(
+                      //               lng: widget.lng,
+                      //               lat: widget.lat,
+                      //             )));
                     }),
                 SizedBox(
                   height: size.height * 0.02,

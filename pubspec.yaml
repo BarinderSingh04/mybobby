@@ -45,16 +45,22 @@ dependencies:
   flutter_rating_bar: ^4.0.1
   country_picker: ^2.0.20
   location: ^4.4.0
-  shared_preferences: ^2.0.20
+  shared_preferences: ^2.1.0
   flutter_riverpod: ^2.3.2
   dio: ^4.0.6
   loading_overlay: ^0.3.0
   cached_network_image: ^3.2.3
   google_maps_flutter: ^2.2.5
   geocoding: ^2.1.0
-  uuid: ^3.0.7
-  http: ^0.13.5
+  freezed_annotation: ^2.2.0
+  collection: ^1.17.0
+  flutter_google_places_sdk: ^0.3.2+6
+  flutter_polyline_points: ^1.0.0
+  geocoding_resolver: ^0.0.3+2
+  flutter_google_places: ^0.3.0
 
+  
+  
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +69,7 @@ dev_dependencies:
   flutter_lints: ^2.0.0
   build_runner: ^2.3.2
   json_serializable: ^6.6.1
+  freezed: ^2.3.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

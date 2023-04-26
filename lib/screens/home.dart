@@ -2,16 +2,17 @@ import 'dart:async';
 import 'package:flutter/material.dart' hide MenuBar;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart' as lac;
+import 'package:mybobby/Services/location_service.dart';
 import 'package:mybobby/commonClass/commonColors.dart';
-import 'package:mybobby/models/user.dart';
-import 'package:mybobby/screens/mytrips_screens/search_places_screen.dart';
+import 'package:mybobby/models/autocomplete_state.dart';
 import 'package:mybobby/screens/search_screen.dart';
-import 'package:mybobby/widgets/menuButton.dart';
+import 'package:mybobby/services/places_service.dart';
+import 'package:mybobby/widgets/menu_button.dart';
 
-import '../models/location_model.dart';
+import '../models/location_data.dart';
+import '../models/user_detail.dart';
+import 'drawer_widget.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -37,21 +38,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     "Saved",
   ];
 
-  final Completer<GoogleMapController> mapController =
-      Completer<GoogleMapController>();
-  final Set<Marker> _markers = {};
+  GoogleMapController? mapController;
   int selectedIndex = -1;
-  lac.LocationData? locationData;
-  List<Placemark>? address;
-  lac.Location location = lac.Location();
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      await getLocationData();
-    });
-  }
 
   @override
   void dispose() {
@@ -63,6 +51,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
     Size size = MediaQuery.of(context).size;
+    final locationState = ref.watch(locationProvider);
+    ref.listen<AsyncValue<LocationData>>(locationProvider, (previous, next) {
+      next.when(
+        data: (data) {
+          final value = data;
+          mapController
+              ?.animateCamera(CameraUpdate.newLatLng(value.currentLocation));
+        },
+        error: (e, st) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString()),
+            ),
+          );
+        },
+        loading: () {},
+      );
+    });
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarIconBrightness: Brightness.dark,
@@ -71,7 +78,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       child: Scaffold(
         key: _key,
-        drawer: const Drawer(),
+        drawer: const DrawerWidget(),
         body: Stack(
           children: [
             SizedBox(
@@ -81,27 +88,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 mapToolbarEnabled: true,
                 buildingsEnabled: true,
                 myLocationButtonEnabled: false,
-                zoomGesturesEnabled: true,
+                zoomGesturesEnabled: false,
                 initialCameraPosition: const CameraPosition(
                   target: LatLng(30.7333, 76.7794),
                   zoom: 14,
                 ),
                 mapType: MapType.normal,
                 zoomControlsEnabled: true,
-                markers: _markers,
+                markers: locationState.valueOrNull?.markers.toSet() ?? {},
                 onMapCreated: (GoogleMapController controller) {
-                  mapController.complete(controller);
+                  mapController = controller;
                 },
               ),
             ),
-            /*   Container(
-              width: size.width,
-              height: size.height,
-              decoration: const BoxDecoration(
-                  image: DecorationImage(
-                      image: AssetImage("assets/images/map.png"),
-                      fit: BoxFit.fill)),
-            ),*/
             Positioned(
               top: MediaQuery.of(context).viewPadding.top + 24,
               left: 16,
@@ -123,11 +122,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 width: size.width,
                 height: size.height * 0.44,
                 decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(40),
-                      topLeft: Radius.circular(40),
-                    )),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(40),
+                    topLeft: Radius.circular(40),
+                  ),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -149,7 +149,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           color: darkBlueColor),
                     ),
                     SizedBox(
-                      height: size.height * 0.034,
+                      height: size.height * 0.02,
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
@@ -158,163 +158,164 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         SizedBox(
                           width: size.width * 0.02,
                         ),
-                        Text(
-                          address != null
-                              ? "${address![0].name},"
-                                  " ${address![0].subAdministrativeArea},"
-                                  " ${address![0].locality}, "
-                                  "${address![0].country}"
-                                  " "
-                                  "${address![0].postalCode}"
-                              : "3517 W. Gray St. Utica, Pennsylvania 57867",
-                          style: const TextStyle(
+                        Expanded(
+                          child: Text(
+                            locationState.valueOrNull?.startPlaceModel?.name ??
+                                "Getting your location...",
+                            maxLines: 2,
+                            style: const TextStyle(
                               fontWeight: FontWeight.w400,
-                              color: darkBlueColor),
+                              color: darkBlueColor,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                     SizedBox(
                       height: size.height * 0.024,
                     ),
-                    Container(
+                    InkWell(
+                      onTap: () {
+                        final location = locationState.asData?.value;
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SearchScreen(
+                              selectedStartPlace: location?.startPlaceModel,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 5, vertical: 6),
                         width: size.width,
                         height: size.height * 0.08,
                         decoration: BoxDecoration(
-                            color: whiteColor,
-                            boxShadow: [
-                              BoxShadow(
-                                blurRadius: 5,
-                                spreadRadius: 2,
-                                color: blackColor.withOpacity(0.08),
-                                // blurStyle: BlurStyle.outer,
-                                // color: Colors.red,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                            border: Border.all(
-                                color: lightGreyColor,
-                                width: 1,
-                                style: BorderStyle.solid),
-                            borderRadius: BorderRadius.circular(8)),
+                          color: whiteColor,
+                          boxShadow: [
+                            BoxShadow(
+                              blurRadius: 5,
+                              spreadRadius: 2,
+                              color: blackColor.withOpacity(0.08),
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: lightGreyColor,
+                            width: 1,
+                            style: BorderStyle.solid,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         child: Row(
                           children: [
                             const SizedBox(
                               width: 17,
                             ),
                             Center(
-                                child: Image.asset(
-                                    "assets/images/searchicon.png")),
+                              child: Image.asset(
+                                "assets/images/searchicon.png",
+                              ),
+                            ),
                             const SizedBox(
                               width: 12,
                             ),
-                            Expanded(
-                              child: Center(
-                                child: TextFormField(
-                                  enabled: true,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const SearchScreen(),
-                                      ),
-                                    );
-                                  },
-                                  decoration: const InputDecoration(
-                                      border: InputBorder.none,
-                                      hintText: "Search Destination",
-                                      hintStyle: TextStyle(
-                                        fontWeight: FontWeight.w400,
-                                        fontSize: 16,
-                                        color: grayColor,
-                                      )),
+                            const Expanded(
+                              child: Text(
+                                "Search Destination",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 16,
+                                  color: grayColor,
                                 ),
                               ),
                             ),
                           ],
-                        )),
+                        ),
+                      ),
+                    ),
                     SizedBox(
                       height: size.height * 0.028,
                     ),
                     SizedBox(
                       height: 70,
                       child: ListView.separated(
-                          physics: const NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          scrollDirection: Axis.horizontal,
-                          itemBuilder: (context, index) {
-                            return GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  selectedIndex = index;
-                                });
-                              },
-                              child: Container(
-                                width: size.width * 0.26,
-                                decoration: BoxDecoration(
-                                  color: selectedIndex == index
-                                      ? lightWhiteColor
-                                      : whiteColor,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      blurRadius: 4,
-                                      spreadRadius: 2,
-                                      color: blackColor.withOpacity(0.08),
-                                      offset: const Offset(0, 1),
-                                    ),
-                                  ],
-                                  border: selectedIndex == index
-                                      ? Border.all(
-                                          color: lightWhiteColor,
-                                          width: 1,
-                                          style: BorderStyle.solid,
-                                        )
-                                      : Border.all(
-                                          color: lightGreyColor,
-                                          width: 1,
-                                          style: BorderStyle.solid,
-                                        ),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    SizedBox(
-                                        width: 30,
-                                        height: 30,
-                                        child: Image.asset(
-                                          imageList[index],
-                                          fit: BoxFit.fill,
-                                        )),
-                                    selectedIndex == index
-                                        ? Text(
-                                            titleList[index],
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              color: darkBlueColor,
-                                            ),
-                                          )
-                                        : Text(
-                                            titleList[index],
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                              color: darkBlueColor,
-                                            ),
-                                          )
-                                  ],
-                                ),
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        scrollDirection: Axis.horizontal,
+                        itemBuilder: (context, index) {
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedIndex = index;
+                              });
+                            },
+                            child: Container(
+                              width: size.width * 0.26,
+                              decoration: BoxDecoration(
+                                color: selectedIndex == index
+                                    ? lightWhiteColor
+                                    : whiteColor,
+                                boxShadow: [
+                                  BoxShadow(
+                                    blurRadius: 4,
+                                    spreadRadius: 2,
+                                    color: blackColor.withOpacity(0.08),
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
+                                border: selectedIndex == index
+                                    ? Border.all(
+                                        color: lightWhiteColor,
+                                        width: 1,
+                                        style: BorderStyle.solid,
+                                      )
+                                    : Border.all(
+                                        color: lightGreyColor,
+                                        width: 1,
+                                        style: BorderStyle.solid,
+                                      ),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                            );
-                          },
-                          separatorBuilder: (context, index) {
-                            return const SizedBox(
-                              width: 17,
-                            );
-                          },
-                          itemCount: 3),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  SizedBox(
+                                      width: 30,
+                                      height: 30,
+                                      child: Image.asset(
+                                        imageList[index],
+                                        fit: BoxFit.fill,
+                                      )),
+                                  selectedIndex == index
+                                      ? Text(
+                                          titleList[index],
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            color: darkBlueColor,
+                                          ),
+                                        )
+                                      : Text(
+                                          titleList[index],
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            color: darkBlueColor,
+                                          ),
+                                        )
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                        separatorBuilder: (context, index) {
+                          return const SizedBox(
+                            width: 17,
+                          );
+                        },
+                        itemCount: 3,
+                      ),
                     ),
                   ],
                 ),
@@ -325,45 +326,57 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-
-  Future<void> getLocationData() async {
-    locationData = await lac.Location().getLocation();
-    final currentLatLng =
-        LatLng(locationData!.latitude!, locationData!.longitude!);
-    _markers.add(Marker(
-      markerId: const MarkerId("1"),
-      position: currentLatLng,
-    ));
-    final controller = await mapController.future;
-    await controller.animateCamera(CameraUpdate.newLatLng(currentLatLng));
-    setState(() {});
-
-    getLocationAddress(address);
-  }
-
-  Future<void> getLocationAddress(List<Placemark>? placeMark) async {
-    try {
-      if (locationData != null) {
-        placeMark = await placemarkFromCoordinates(
-          locationData!.latitude!,
-          locationData!.longitude!,
-        );
-        setState(() {
-          address = placeMark;
-        });
-      }
-    } catch (e, st) {
-      AsyncValue.error(e, st);
-    }
-  }
 }
 
 final locationProvider =
-    StateNotifierProvider<LocationNotifier, AsyncValue<LocationModel?>>((ref) {
-  return LocationNotifier();
-});
+    AsyncNotifierProvider<LocationNotifier, LocationData>(LocationNotifier.new);
 
-class LocationNotifier extends StateNotifier<AsyncValue<LocationModel?>> {
-  LocationNotifier() : super(const AsyncLoading());
-  
+class LocationNotifier extends AsyncNotifier<LocationData> {
+  @override
+  FutureOr<LocationData> build() {
+    return getLocationData();
+  }
+
+  Future<LocationData> getLocationData() async {
+    try {
+      final location = await getCurrentLocation();
+      final placeModel = await getPlaceName(location);
+      final marker = getMarker(location);
+      return LocationData(
+        currentLocation: location,
+        startPlaceModel: placeModel,
+        markers: [marker],
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<LatLng> getCurrentLocation() async {
+    try {
+      final permissionStatus =
+          await ref.read(locationServiceProvider).getPermissionStatus();
+      final location =
+          await ref.read(locationServiceProvider).getLocation(permissionStatus);
+      if (location.latitude != null && location.longitude != null) {
+        return LatLng(location.latitude!, location.longitude!);
+      } else {
+        return Future.error("Unable to get your location");
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Marker getMarker(LatLng location) {
+    return Marker(markerId: const MarkerId("user"), position: location);
+  }
+
+  Future<PlaceModel> getPlaceName(LatLng location) async {
+    try {
+      return await ref.read(placeServiceProvider).getPlaceModel(location);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
